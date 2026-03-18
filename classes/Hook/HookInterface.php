@@ -25,10 +25,6 @@ use Ps_Googleanalytics;
 
 interface HookInterface
 {
-    /**
-     * @param Ps_Googleanalytics $module
-     * @param Context $context
-     */
     public function __construct(Ps_Googleanalytics $module, Context $context);
 
     public function run();

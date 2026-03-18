@@ -26,10 +26,8 @@ class ModuleHandler
 {
     /**
      * @param string $moduleName
-     *
-     * @return bool
      */
-    public function isModuleEnabled($moduleName)
+    public function isModuleEnabled($moduleName): bool
     {
         $module = Module::getInstanceByName($moduleName);
 

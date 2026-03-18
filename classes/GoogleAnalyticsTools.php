@@ -28,12 +28,10 @@ class GoogleAnalyticsTools
      * Renders purchase event for order
      *
      * @param array $orderProducts
-     * @param array $orderData
-     * @param string $callbackUrl
      *
      * @return string|void
      */
-    public function renderPurchaseEvent($orderProducts, $orderData, $callbackUrl)
+    public function renderPurchaseEvent($orderProducts, array $orderData, string $callbackUrl)
     {
         if (!is_array($orderProducts)) {
             return;
@@ -72,7 +70,7 @@ class GoogleAnalyticsTools
      *
      * @return string json encoded data
      */
-    public function jsonEncodeWithBlacklist($data, $ignoredKeys = [])
+    public function jsonEncodeWithBlacklist($data, $ignoredKeys = []): string
     {
         $return = [];
 
@@ -97,7 +95,7 @@ class GoogleAnalyticsTools
      *
      * @return string render gtag event for output
      */
-    public function renderEvent($eventName, $eventData, $ignoredKeys = [])
+    public function renderEvent($eventName, $eventData, $ignoredKeys = []): string
     {
         // Automatically add send_to parameter to all events to avoid sending extra events
         // to other gtag configs (Ads for example).

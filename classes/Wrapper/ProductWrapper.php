@@ -47,7 +47,7 @@ class ProductWrapper
      *
      * @return array Item data standardized for GA
      */
-    public function prepareItemListFromProductList($productList, $useProvidedQuantity = false)
+    public function prepareItemListFromProductList($productList, $useProvidedQuantity = false): array
     {
         $items = [];
 
@@ -81,10 +81,8 @@ class ProductWrapper
 
     /**
      * Loads all product categories for provided product IDs
-     *
-     * @param array $productIds
      */
-    private function loadCategories($productIds)
+    private function loadCategories(array $productIds): void
     {
         if (empty($productIds)) {
             return;
@@ -129,7 +127,7 @@ class ProductWrapper
      *
      * @return array Item data standardized for GA
      */
-    public function prepareItemFromProduct($product, $useProvidedQuantity = false)
+    public function prepareItemFromProduct($product, $useProvidedQuantity = false): array
     {
         // Standardize product ID
         $product_id = 0;
@@ -227,7 +225,7 @@ class ProductWrapper
      *
      * @return string Attribute list
      */
-    public function getProductVariant($id_product_attribute)
+    public function getProductVariant($id_product_attribute): string
     {
         $result = Db::getInstance()->executeS(
             'SELECT al.`name` AS attribute_name

@@ -68,7 +68,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code for product listings, like category pages.
      */
-    private function renderProductListing()
+    private function renderProductListing(): void
     {
         // Try to get product list variable
         $listing = $this->context->smarty->getTemplateVars('listing');
@@ -120,7 +120,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code when user searches on the shop.
      */
-    private function renderSearch()
+    private function renderSearch(): void
     {
         // Check if we are on search page and we have a search string
         if ($this->context->controller->php_self != 'search' || empty($_GET['s'])) {
@@ -140,7 +140,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code for product listings, like category pages.
      */
-    private function renderCartpage()
+    private function renderCartpage(): void
     {
         // Check if we are on cart page
         if ($this->context->controller->php_self != 'cart') {
@@ -172,7 +172,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code for product listings, like category pages.
      */
-    private function renderBeginCheckout()
+    private function renderBeginCheckout(): void
     {
         // Check if we are on some supported order controller
         $allowed_controllers = ['order', 'orderopc', 'checkout'];
@@ -211,7 +211,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code after user logs in.
      */
-    private function renderLogin()
+    private function renderLogin(): void
     {
         // Render it only on login page AND if we are not creating a new account in older PS versions
         // For newer versions, registrations are handled with standalone registration controller.
@@ -226,7 +226,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * This method renders tracking code after user registers.
      */
-    private function renderRegistration()
+    private function renderRegistration(): void
     {
         if ($this->context->controller->php_self != 'registration' &&
             ($this->context->controller->php_self != 'authentication' || !isset($_GET['create_account']))
@@ -241,7 +241,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
     /**
      * Saves information about last visited product listing, so we can later use it for select_item event.
      */
-    private function saveInformationAboutListing()
+    private function saveInformationAboutListing(): void
     {
         // Try to get product list variable
         $listing = $this->context->smarty->getTemplateVars('listing');
@@ -261,7 +261,7 @@ class HookDisplayBeforeBodyClosingTag implements HookInterface
      * Outputs all events we stored into data repository during previous AJAX requests
      * on previous page.
      */
-    private function outputStoredEvents()
+    private function outputStoredEvents(): void
     {
         // Get all stored events
         $storedEvents = $this->module->getDataHandler()->readData();

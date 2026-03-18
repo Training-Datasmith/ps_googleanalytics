@@ -43,10 +43,8 @@ class HookActionCartUpdateQuantityBefore implements HookInterface
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         /*
          * The hook passes a legacy Product object to add, but no attribute information.
@@ -99,7 +97,7 @@ class HookActionCartUpdateQuantityBefore implements HookInterface
     /**
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

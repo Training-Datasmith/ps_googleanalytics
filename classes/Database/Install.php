@@ -45,10 +45,8 @@ class Install
 
     /**
      * installTables
-     *
-     * @return bool
      */
-    public function installTables()
+    public function installTables(): bool
     {
         $sql = [];
 
@@ -83,10 +81,8 @@ class Install
 
     /**
      * Insert default data to database
-     *
-     * @return bool
      */
-    public function setDefaultConfiguration()
+    public function setDefaultConfiguration(): bool
     {
         Configuration::updateValue('GA_CANCELLED_STATES', json_encode([Configuration::get('PS_OS_CANCELED')]));
         Configuration::updateValue('GA_BACKLOAD_ENABLED', false);
@@ -97,10 +93,8 @@ class Install
 
     /**
      * Register Module hooks
-     *
-     * @return bool
      */
-    public function registerHooks()
+    public function registerHooks(): bool
     {
         return $this->module->registerHook('displayHeader') &&
             $this->module->registerHook('displayAdminOrder') &&

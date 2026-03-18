@@ -44,10 +44,8 @@ class HookActionObjectProductInCartDeleteBefore implements HookInterface
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         // Format product and standardize ID
         $product = new Product((int) $this->params['id_product'], false, (int) $this->context->language->id);
@@ -87,7 +85,7 @@ class HookActionObjectProductInCartDeleteBefore implements HookInterface
     /**
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

@@ -50,10 +50,8 @@ class HookActionOrderStatusPostUpdate implements HookInterface
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         // If we do not have an order or a new order status, we return
         if (empty($this->params['id_order']) || empty($this->params['newOrderStatus']->id)) {
@@ -90,7 +88,7 @@ class HookActionOrderStatusPostUpdate implements HookInterface
      *
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

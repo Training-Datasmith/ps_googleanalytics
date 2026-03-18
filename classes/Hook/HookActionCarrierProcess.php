@@ -38,10 +38,8 @@ class HookActionCarrierProcess implements HookInterface
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         if (isset($this->params['cart']->id_carrier)) {
             $carrierRepository = new CarrierRepository();
@@ -73,7 +71,7 @@ class HookActionCarrierProcess implements HookInterface
     /**
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

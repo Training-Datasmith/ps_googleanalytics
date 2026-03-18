@@ -47,10 +47,8 @@ class HookDisplayBackOfficeHeader implements HookInterface
 
     /**
      * run
-     *
-     * @return string
      */
-    public function run()
+    public function run(): string
     {
         // Add assets if we are on configuration page
         if (strcmp(Tools::getValue('configure'), $this->module->name) === 0) {
@@ -124,7 +122,7 @@ class HookDisplayBackOfficeHeader implements HookInterface
      *
      * @param int $idOrder
      */
-    public function processOrder($idOrder)
+    public function processOrder($idOrder): void
     {
         $order = new Order((int) $idOrder);
 

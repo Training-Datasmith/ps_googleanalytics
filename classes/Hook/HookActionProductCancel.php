@@ -45,10 +45,8 @@ class HookActionProductCancel implements HookInterface
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         if (!isset($this->params['id_order_detail']) || !isset($this->params['cancel_quantity'])) {
             return;
@@ -80,7 +78,7 @@ class HookActionProductCancel implements HookInterface
      *
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

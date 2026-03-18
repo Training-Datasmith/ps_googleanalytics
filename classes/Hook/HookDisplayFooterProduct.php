@@ -102,10 +102,8 @@ class HookDisplayFooterProduct implements HookInterface
     /**
      * Checks HTTP_REFERER to see if the previous page that got user to this product
      * was our shop.
-     *
-     * @return bool
      */
-    private function wasPreviousPageOurShop()
+    private function wasPreviousPageOurShop(): bool
     {
         if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']) !== false) {
             return true;

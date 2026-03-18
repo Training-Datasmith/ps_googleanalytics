@@ -26,11 +26,6 @@ use Ps_Googleanalytics;
 class HookActionValidateOrder implements HookInterface
 {
     /**
-     * @var Ps_Googleanalytics
-     */
-    private $module;
-
-    /**
      * @var Context
      */
     private $context;
@@ -42,16 +37,13 @@ class HookActionValidateOrder implements HookInterface
 
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
-        $this->module = $module;
         $this->context = $context;
     }
 
     /**
      * run
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         // Check if we are creating backoffice order, we are only launching this hook when creating backoffice order
         // For FO purposes, we use displayOrderConfirmation.
@@ -82,7 +74,7 @@ class HookActionValidateOrder implements HookInterface
      *
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

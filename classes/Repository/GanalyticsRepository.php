@@ -45,10 +45,8 @@ class GanalyticsRepository
      * Checks if order is already sent to GA
      *
      * @param int $idOrder
-     *
-     * @return bool
      */
-    public function hasOrderBeenAlreadySent($idOrder)
+    public function hasOrderBeenAlreadySent($idOrder): bool
     {
         return (bool) Db::getInstance()->getValue(
             'SELECT `sent`
@@ -77,9 +75,7 @@ class GanalyticsRepository
     /**
      * addNewRow
      *
-     * @param array $data
      * @param int $type
-     *
      * @return bool
      */
     public function addNewRow(array $data, $type = Db::INSERT_IGNORE)
@@ -96,8 +92,6 @@ class GanalyticsRepository
     /**
      * Adds new order into repository
      *
-     * @param int $idOrder
-     * @param int $idShop
      *
      * @return bool
      */
@@ -105,8 +99,8 @@ class GanalyticsRepository
     {
         return $this->addNewRow(
             [
-                'id_order' => (int) $idOrder,
-                'id_shop' => (int) $idShop,
+                'id_order' => $idOrder,
+                'id_shop' => $idShop,
                 'sent' => 0,
                 'date_add' => ['value' => 'NOW()', 'type' => 'sql'],
             ]

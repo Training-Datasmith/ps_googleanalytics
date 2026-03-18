@@ -37,7 +37,7 @@ class OrderWrapper
     /**
      * Return a detailed transaction for Google Analytics
      */
-    public function wrapOrder($order)
+    public function wrapOrder($order): array
     {
         // Prepare currency information
         $currency = new Currency((int) $order->id_currency);

@@ -108,7 +108,7 @@ class HookDisplayOrderConfirmation implements HookInterface
      *
      * @param array $params
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }

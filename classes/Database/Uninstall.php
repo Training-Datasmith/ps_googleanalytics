@@ -28,10 +28,8 @@ class Uninstall
 {
     /**
      * uninstallTables
-     *
-     * @return bool
      */
-    public function uninstallTables()
+    public function uninstallTables(): bool
     {
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ganalytics`';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ganalytics_data`';
@@ -56,7 +54,7 @@ class Uninstall
         $id_tab = (int) Tab::getIdFromClassName('AdminGanalyticsAjax');
         $tab = new Tab($id_tab);
         if (Validate::isLoadedObject($tab)) {
-            $result = $tab->delete();
+            return $tab->delete();
         }
 
         return $result;
