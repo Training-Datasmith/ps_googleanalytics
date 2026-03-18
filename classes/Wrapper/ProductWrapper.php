@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -154,7 +156,7 @@ class ProductWrapper
         // Add manufacturer info if we have it
         if (!empty($product['manufacturer_name'])) {
             $item['item_brand'] = $product['manufacturer_name'];
-        // If we don't, which can happen due to some bugs in getProductProperties, we will fetch it manually
+            // If we don't, which can happen due to some bugs in getProductProperties, we will fetch it manually
         } elseif (!empty($product['id_manufacturer'])) {
             $manufacturerName = Manufacturer::getNameById((int) $product['id_manufacturer']);
             if (!empty($manufacturerName)) {
@@ -171,7 +173,7 @@ class ProductWrapper
         if (!empty($product['attributes_small'])) {
             $item['item_variant'] = $product['attributes_small'];
 
-        // If we don't, we will construct it in the same format
+            // If we don't, we will construct it in the same format
         } elseif (!empty($product['id_product_attribute'])) {
             $variant = $this->getProductVariant((int) $product['id_product_attribute']);
             if (!empty($variant)) {

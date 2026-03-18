@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -24,7 +26,7 @@ use Db;
 
 class CarrierRepository
 {
-    const TABLE_NAME = 'carrier';
+    public const TABLE_NAME = 'carrier';
 
     /**
      * findByCarrierId

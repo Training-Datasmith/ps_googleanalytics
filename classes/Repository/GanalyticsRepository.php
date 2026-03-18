@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -24,7 +26,7 @@ use Db;
 
 class GanalyticsRepository
 {
-    const TABLE_NAME = 'ganalytics';
+    public const TABLE_NAME = 'ganalytics';
 
     /**
      * Finds if we have a record for this order ID.
@@ -38,7 +40,8 @@ class GanalyticsRepository
         return Db::getInstance()->getValue(
             'SELECT id_order
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_order = ' . (int) $orderId);
+            WHERE id_order = ' . (int) $orderId
+        );
     }
 
     /**
@@ -51,7 +54,8 @@ class GanalyticsRepository
         return (bool) Db::getInstance()->getValue(
             'SELECT `sent`
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_order = ' . (int) $idOrder);
+            WHERE id_order = ' . (int) $idOrder
+        );
     }
 
     /**
