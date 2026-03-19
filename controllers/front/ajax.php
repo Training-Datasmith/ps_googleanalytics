@@ -36,7 +36,7 @@ class ps_GoogleanalyticsAjaxModuleFrontController extends ModuleFrontController
         $orderId = (int) Tools::getValue('orderid');
         $order = new Order($orderId);
 
-        if (!Validate::isLoadedObject($order) || $order->id_customer != (int) Tools::getValue('customer')) {
+        if (!Validate::isLoadedObject($order) || $order->id_customer != (int) $this->context->customer->id) {
             $this->ajaxRender('KO');
             exit;
         }
