@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,15 +19,12 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Repository;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Repository;
 
 use Db;
-
-class CarrierRepository
+class Carrier_Repository
 {
     public const TABLE_NAME = 'carrier';
-
     /**
      * findByCarrierId
      *
@@ -35,12 +32,10 @@ class CarrierRepository
      *
      * @return string
      */
-    public function findByCarrierId($carrierId)
+    public function find_by_carrier_id($carrier_id)
     {
-        return Db::getInstance()->getValue(
-            'SELECT name
+        return Db::get_instance()->get_value('SELECT name
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_carrier = ' . (int) $carrierId
-        );
+            WHERE id_carrier = ' . (int) $carrier_id);
     }
 }

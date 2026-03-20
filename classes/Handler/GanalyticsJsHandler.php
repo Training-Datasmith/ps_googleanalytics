@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,24 +19,20 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Handler;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Handler;
 
 use Configuration;
 use Context;
 use Ps_Googleanalytics;
-
-class GanalyticsJsHandler
+class Ganalytics_Js_Handler
 {
     private $module;
     private $context;
-
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * Generate Google Analytics js
      *
@@ -44,19 +40,11 @@ class GanalyticsJsHandler
      *
      * @return void|string
      */
-    public function generate($jsCode)
+    public function generate($js_code)
     {
         if (Configuration::get('GA_ACCOUNT_ID')) {
-            $this->context->smarty->assign(
-                [
-                    'jsCode' => $jsCode,
-                ]
-            );
-
-            return $this->module->display(
-                $this->module->getLocalPath() . $this->module->name,
-                'ga_tag.tpl'
-            );
+            $this->context->smarty->assign(['jsCode' => $js_code]);
+            return $this->module->display($this->module->get_local_path() . $this->module->name, 'ga_tag.tpl');
         }
     }
 }

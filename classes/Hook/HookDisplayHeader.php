@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,16 +19,14 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Configuration;
 use Context;
 use Customer;
 use Ps_Googleanalytics;
 use Tools;
-
-class HookDisplayHeader implements HookInterface
+class Hook_Display_Header implements Hook_Interface
 {
     /**
      * @var Ps_Googleanalytics
@@ -38,18 +36,15 @@ class HookDisplayHeader implements HookInterface
      * @var Context
      */
     private $context;
-
     /**
      * @var bool
      */
-    private $backOffice;
-
+    private $back_office;
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * @return false|string
      */
@@ -58,37 +53,19 @@ class HookDisplayHeader implements HookInterface
         if (!Configuration::get('GA_ACCOUNT_ID')) {
             return '';
         }
-
         // Resolve if we should add user ID into the code
-        $userId = null;
-        if (Configuration::get('GA_USERID_ENABLED')
-            && $this->context->customer instanceof Customer
-            && $this->context->customer->isLogged()
-        ) {
-            $userId = (int) $this->context->customer->id;
+        $user_id = null;
+        if (Configuration::get('GA_USERID_ENABLED') && $this->context->customer instanceof Customer && $this->context->customer->is_logged()) {
+            $user_id = (int) $this->context->customer->id;
         }
-
-        $this->context->smarty->assign(
-            [
-                'backOffice' => $this->backOffice,
-                'trackBackOffice' => Configuration::get('GA_TRACK_BACKOFFICE_ENABLED'),
-                'userId' => $userId,
-                'gaAccountId' => Tools::safeOutput(Configuration::get('GA_ACCOUNT_ID')),
-                'gaAnonymizeEnabled' => Configuration::get('GA_ANONYMIZE_ENABLED'),
-            ]
-        );
-
-        return $this->module->display(
-            $this->module->getLocalPath() . $this->module->name,
-            'ps_googleanalytics.tpl'
-        );
+        $this->context->smarty->assign(['backOffice' => $this->back_office, 'trackBackOffice' => Configuration::get('GA_TRACK_BACKOFFICE_ENABLED'), 'userId' => $user_id, 'gaAccountId' => Tools::safe_output(Configuration::get('GA_ACCOUNT_ID')), 'gaAnonymizeEnabled' => Configuration::get('GA_ANONYMIZE_ENABLED')]);
+        return $this->module->display($this->module->get_local_path() . $this->module->name, 'ps_googleanalytics.tpl');
     }
-
     /**
      * @param bool $backOffice
      */
-    public function setBackOffice($backOffice): void
+    public function set_back_office($back_office): void
     {
-        $this->backOffice = $backOffice;
+        $this->back_office = $back_office;
     }
 }

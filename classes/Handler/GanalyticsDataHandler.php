@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,62 +19,48 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
+namespace Presta_Shop\Module\Ps_Googleanalytics\Handler;
 
-namespace PrestaShop\Module\Ps_Googleanalytics\Handler;
-
-use PrestaShop\Module\Ps_Googleanalytics\Repository\GanalyticsDataRepository;
-
-class GanalyticsDataHandler
+use Presta_Shop\Module\Ps_Googleanalytics\Repository\Ganalytics_Data_Repository;
+class Ganalytics_Data_Handler
 {
-    private $ganalyticsDataRepository;
-    private $cartId;
-    private $shopId;
-
+    private $ganalytics_data_repository;
+    private $cart_id;
+    private $shop_id;
     /**
      * __construct
      *
      * @param int $cartId
      * @param int $shopId
      */
-    public function __construct($cartId, $shopId)
+    public function __construct($cart_id, $shop_id)
     {
-        $this->ganalyticsDataRepository = new GanalyticsDataRepository();
-        $this->cartId = (int) $cartId;
-        $this->shopId = (int) $shopId;
+        $this->ganalytics_data_repository = new Ganalytics_Data_Repository();
+        $this->cart_id = (int) $cart_id;
+        $this->shop_id = (int) $shop_id;
     }
-
     /**
      * readData
      *
      * @return array
      */
-    public function readData()
+    public function read_data()
     {
-        $dataReturned = $this->ganalyticsDataRepository->findDataByCartIdAndShopId(
-            $this->cartId,
-            $this->shopId
-        );
-
-        if (false === $dataReturned) {
+        $data_returned = $this->ganalytics_data_repository->find_data_by_cart_id_and_shop_id($this->cart_id, $this->shop_id);
+        if (false === $data_returned) {
             return [];
         }
-
-        return $this->jsonDecodeValidJson($dataReturned);
+        return $this->json_decode_valid_json($data_returned);
     }
-
     /**
      * Deletes all persisted data, probably because it was flushed.
      *
      * @return bool
      */
-    public function deleteData()
+    public function delete_data()
     {
-        return $this->ganalyticsDataRepository->deleteRow(
-            $this->cartId,
-            $this->shopId
-        );
+        return $this->ganalytics_data_repository->delete_row($this->cart_id, $this->shop_id);
     }
-
     /**
      * Stores event into data repository so we can output it
      * on first available chance.
@@ -83,27 +69,20 @@ class GanalyticsDataHandler
      *
      * @return bool
      */
-    public function persistData($dataToPersist)
+    public function persist_data($data_to_persist)
     {
         // Try to get current data
-        $currentData = $this->readData();
-
+        $current_data = $this->read_data();
         // If no data has been persisted yet, we create a new array, otherwise
         // we add it to the previous events stored.
-        if (!empty($currentData)) {
-            $newData = $currentData;
-            $newData[] = $dataToPersist;
+        if (!empty($current_data)) {
+            $new_data = $current_data;
+            $new_data[] = $data_to_persist;
         } else {
-            $newData = [$dataToPersist];
+            $new_data = [$data_to_persist];
         }
-
-        return $this->ganalyticsDataRepository->addNewRow(
-            (int) $this->cartId,
-            (int) $this->shopId,
-            json_encode($newData)
-        );
+        return $this->ganalytics_data_repository->add_new_row((int) $this->cart_id, (int) $this->shop_id, json_encode($new_data));
     }
-
     /**
      * Check if the json is valid and returns an empty array if not
      *
@@ -111,14 +90,12 @@ class GanalyticsDataHandler
      *
      * @return array
      */
-    protected function jsonDecodeValidJson($json)
+    protected function json_decode_valid_json($json)
     {
         $array = json_decode($json, true);
-
         if (JSON_ERROR_NONE === json_last_error()) {
             return $array;
         }
-
         return [];
     }
 }

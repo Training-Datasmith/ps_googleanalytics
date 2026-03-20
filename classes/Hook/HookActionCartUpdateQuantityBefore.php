@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,30 +19,25 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Context;
-use PrestaShop\Module\Ps_Googleanalytics\Wrapper\ProductWrapper;
+use Presta_Shop\Module\Ps_Googleanalytics\Wrapper\Product_Wrapper;
 use Product;
 use Ps_Googleanalytics;
-
-class HookActionCartUpdateQuantityBefore implements HookInterface
+class Hook_Action_Cart_Update_Quantity_Before implements Hook_Interface
 {
     private $module;
-
     /**
      * @var Context
      */
     private $context;
     private $params;
-
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * run
      */
@@ -62,7 +57,6 @@ class HookActionCartUpdateQuantityBefore implements HookInterface
          * $this->params['operator'] == down
          * $this->params['quantity'] to determine quantity
          */
-
         // Format product and standardize ID
         $product = (array) $this->params['product'];
         $product['id_product'] = $product['id'];
@@ -70,36 +64,23 @@ class HookActionCartUpdateQuantityBefore implements HookInterface
         if (!empty($this->params['id_product_attribute'])) {
             $product['id_product_attribute'] = (int) $this->params['id_product_attribute'];
         }
-
         // Get some basic information
-        $product = Product::getProductProperties($this->context->language->id, $product);
-
+        $product = Product::get_product_properties($this->context->language->id, $product);
         // Add information about quantity difference
         $product['quantity'] = (int) $this->params['quantity'];
-
         // Prepare it and format it for our purpose
-        $productWrapper = new ProductWrapper($this->context);
-        $item = $productWrapper->prepareItemFromProduct($product, true);
-
+        $product_wrapper = new Product_Wrapper($this->context);
+        $item = $product_wrapper->prepare_item_from_product($product, true);
         // Prepare and render event
-        $eventData = [
-            'currency' => $this->context->currency->iso_code,
-            'value' => $item['price'] * $item['quantity'],
-            'items' => [$item],
-        ];
-        $jsCode = $this->module->getTools()->renderEvent(
-            $this->params['operator'] == 'up' ? 'add_to_cart' : 'remove_from_cart',
-            $eventData
-        );
-
+        $event_data = ['currency' => $this->context->currency->iso_code, 'value' => $item['price'] * $item['quantity'], 'items' => [$item]];
+        $js_code = $this->module->get_tools()->render_event($this->params['operator'] == 'up' ? 'add_to_cart' : 'remove_from_cart', $event_data);
         // Store this event
-        $this->module->getDataHandler()->persistData($jsCode);
+        $this->module->get_data_handler()->persist_data($js_code);
     }
-
     /**
      * @param array $params
      */
-    public function setParams($params): void
+    public function set_params($params): void
     {
         $this->params = $params;
     }

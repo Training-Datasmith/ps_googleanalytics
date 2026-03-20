@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,166 +19,126 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Cart;
 use Configuration;
 use Context;
 use Db;
 use Order;
-use PrestaShop\Module\Ps_Googleanalytics\Handler\GanalyticsJsHandler;
-use PrestaShop\Module\Ps_Googleanalytics\Repository\GanalyticsRepository;
-use PrestaShop\Module\Ps_Googleanalytics\Wrapper\OrderWrapper;
-use PrestaShop\Module\Ps_Googleanalytics\Wrapper\ProductWrapper;
+use Presta_Shop\Module\Ps_Googleanalytics\Handler\Ganalytics_Js_Handler;
+use Presta_Shop\Module\Ps_Googleanalytics\Repository\Ganalytics_Repository;
+use Presta_Shop\Module\Ps_Googleanalytics\Wrapper\Order_Wrapper;
+use Presta_Shop\Module\Ps_Googleanalytics\Wrapper\Product_Wrapper;
 use Ps_Googleanalytics;
 use Tools;
 use Validate;
-
-class HookDisplayBackOfficeHeader implements HookInterface
+class Hook_Display_Back_Office_Header implements Hook_Interface
 {
     private $module;
     private $context;
-    private $gaScripts = '';
-
+    private $ga_scripts = '';
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * run
      */
     public function run(): string
     {
         // Add assets if we are on configuration page
-        if (strcmp(Tools::getValue('configure'), $this->module->name) === 0) {
-            $this->context->controller->addCSS($this->module->getPathUri() . 'views/css/ganalytics.css');
+        if (strcmp(Tools::get_value('configure'), $this->module->name) === 0) {
+            $this->context->controller->add_css($this->module->get_path_uri() . 'views/css/ganalytics.css');
         }
-
         // Render base tag using displayHeader hook with backoffice parameter
-        $this->gaScripts .= $this->module->hookDisplayHeader(null, true);
-
+        $this->ga_scripts .= $this->module->hook_display_header(null, true);
         // Process manual orders instantly, we have their IDs in cookie
-        $this->processManualOrders();
-
+        $this->process_manual_orders();
         // Backload old orders that failed to load normally
-        $this->processFailedOrders();
-
-        return $this->gaScripts;
+        $this->process_failed_orders();
+        return $this->ga_scripts;
     }
-
     /**
      * Checks if there are any orders that failed to be sent normally through front office and processes them
      */
-    protected function processFailedOrders()
+    protected function process_failed_orders()
     {
         if (empty(Configuration::get('GA_BACKLOAD_ENABLED'))) {
             return;
         }
-
         // Check for value on how long back we will get them
-        $backloadDays = (int) Configuration::get('GA_BACKLOAD_DAYS');
-        if ($backloadDays < 1) {
+        $backload_days = (int) Configuration::get('GA_BACKLOAD_DAYS');
+        if ($backload_days < 1) {
             return;
         }
-
         // Get all failed orders (either not present in our table or not sent)
         // We go GA_BACKLOAD_DAYS into the past and at least 30 minutes old
-        $failedOrders = Db::getInstance()->ExecuteS(
-            'SELECT DISTINCT o.id_order, g.sent FROM `' . _DB_PREFIX_ . 'orders` o
-            LEFT JOIN `' . _DB_PREFIX_ . GanalyticsRepository::TABLE_NAME . '` g ON o.id_order = g.id_order
-            WHERE (g.sent IS NULL OR g.sent = 0) AND o.date_add BETWEEN NOW() - INTERVAL ' . $backloadDays . ' DAY AND NOW() - INTERVAL 30 MINUTE'
-        );
-
+        $failed_orders = Db::get_instance()->execute_s('SELECT DISTINCT o.id_order, g.sent FROM `' . _DB_PREFIX_ . 'orders` o
+            LEFT JOIN `' . _DB_PREFIX_ . Ganalytics_Repository::TABLE_NAME . '` g ON o.id_order = g.id_order
+            WHERE (g.sent IS NULL OR g.sent = 0) AND o.date_add BETWEEN NOW() - INTERVAL ' . $backload_days . ' DAY AND NOW() - INTERVAL 30 MINUTE');
         // Process each failed order
-        foreach ($failedOrders as $row) {
-            $this->processOrder((int) $row['id_order']);
+        foreach ($failed_orders as $row) {
+            $this->process_order((int) $row['id_order']);
         }
     }
-
     /**
      * Checks if there are any manual orders in cookie and processes them
      */
-    protected function processManualOrders()
+    protected function process_manual_orders()
     {
-        $adminOrders = $this->context->cookie->ga_admin_order;
-        if (empty($adminOrders)) {
+        $admin_orders = $this->context->cookie->ga_admin_order;
+        if (empty($admin_orders)) {
             return;
         }
-
         // Separate them by IDs and process one by one
-        $adminOrders = explode(',', $adminOrders);
-        foreach ($adminOrders as $idOrder) {
-            $this->processOrder((int) $idOrder);
+        $admin_orders = explode(',', $admin_orders);
+        foreach ($admin_orders as $id_order) {
+            $this->process_order((int) $id_order);
         }
-
         // Clean up the cookie
         unset($this->context->cookie->ga_admin_order);
         $this->context->cookie->write();
     }
-
     /**
      * Renders tracking code for given order
      *
      * @param int $idOrder
      */
-    public function processOrder($idOrder): void
+    public function process_order($id_order): void
     {
-        $order = new Order((int) $idOrder);
-
-        if (!Validate::isLoadedObject($order) || $order->getCurrentState() == (int) Configuration::get('PS_OS_ERROR')) {
+        $order = new Order((int) $id_order);
+        if (!Validate::is_loaded_object($order) || $order->get_current_state() == (int) Configuration::get('PS_OS_ERROR')) {
             return;
         }
-
         // Load up our handlers and repositories
-        $ganalyticsRepository = new GanalyticsRepository();
-        $gaTagHandler = new GanalyticsJsHandler($this->module, $this->context);
-        $productWrapper = new ProductWrapper($this->context);
-        $orderWrapper = new OrderWrapper($this->context);
-
+        $ganalytics_repository = new Ganalytics_Repository();
+        $ga_tag_handler = new Ganalytics_Js_Handler($this->module, $this->context);
+        $product_wrapper = new Product_Wrapper($this->context);
+        $order_wrapper = new Order_Wrapper($this->context);
         // If it's a completely new order, add order to repository, so we can later mark it as sent
-        if (empty($ganalyticsRepository->findGaOrderByOrderId((int) $order->id))) {
-            $ganalyticsRepository->addOrder((int) $order->id, (int) $order->id_shop);
+        if (empty($ganalytics_repository->find_ga_order_by_order_id((int) $order->id))) {
+            $ganalytics_repository->add_order((int) $order->id, (int) $order->id_shop);
         }
-
         // If the order was already sent for some reason, don't do anything
-        if ($ganalyticsRepository->hasOrderBeenAlreadySent((int) $order->id)) {
+        if ($ganalytics_repository->has_order_been_already_sent((int) $order->id)) {
             return;
         }
-
         // Prepare transaction data
-        $orderData = $orderWrapper->wrapOrder($order);
-
+        $order_data = $order_wrapper->wrap_order($order);
         // Empty script for the current order
-        $gaScripts = '';
-
+        $ga_scripts = '';
         // Prepare order products, if the cart still exists
-        $orderProducts = [];
+        $order_products = [];
         $cart = new Cart($order->id_cart);
-        if (Validate::isLoadedObject($cart)) {
-            $orderProducts = $productWrapper->prepareItemListFromProductList($cart->getProducts(), true);
+        if (Validate::is_loaded_object($cart)) {
+            $order_products = $product_wrapper->prepare_item_list_from_product_list($cart->get_products(), true);
         }
-
         // Add payment event
-        $gaScripts .= $this->module->getTools()->renderEvent(
-            'add_payment_info',
-            [
-                'currency' => $orderData['currency'],
-                'value' => (float) $orderData['value'],
-                'payment_type' => $orderData['payment_type'],
-                'items' => $orderProducts,
-            ]
-        );
-
+        $ga_scripts .= $this->module->get_tools()->render_event('add_payment_info', ['currency' => $order_data['currency'], 'value' => (float) $order_data['value'], 'payment_type' => $order_data['payment_type'], 'items' => $order_products]);
         // Render transaction code
-        $gaScripts .= $this->module->getTools()->renderPurchaseEvent(
-            $orderProducts,
-            $orderData,
-            $this->context->link->getAdminLink('AdminGanalyticsAjax')
-        );
-
-        $this->gaScripts .= $gaTagHandler->generate($gaScripts);
+        $ga_scripts .= $this->module->get_tools()->render_purchase_event($order_products, $order_data, $this->context->link->get_admin_link('AdminGanalyticsAjax'));
+        $this->ga_scripts .= $ga_tag_handler->generate($ga_scripts);
     }
 }

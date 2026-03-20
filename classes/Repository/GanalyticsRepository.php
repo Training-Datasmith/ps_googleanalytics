@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,15 +19,12 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Repository;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Repository;
 
 use Db;
-
-class GanalyticsRepository
+class Ganalytics_Repository
 {
     public const TABLE_NAME = 'ganalytics';
-
     /**
      * Finds if we have a record for this order ID.
      *
@@ -35,29 +32,23 @@ class GanalyticsRepository
      *
      * @return mixed
      */
-    public function findGaOrderByOrderId($orderId)
+    public function find_ga_order_by_order_id($order_id)
     {
-        return Db::getInstance()->getValue(
-            'SELECT id_order
+        return Db::get_instance()->get_value('SELECT id_order
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_order = ' . (int) $orderId
-        );
+            WHERE id_order = ' . (int) $order_id);
     }
-
     /**
      * Checks if order is already sent to GA
      *
      * @param int $idOrder
      */
-    public function hasOrderBeenAlreadySent($idOrder): bool
+    public function has_order_been_already_sent($id_order): bool
     {
-        return (bool) Db::getInstance()->getValue(
-            'SELECT `sent`
+        return (bool) Db::get_instance()->get_value('SELECT `sent`
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_order = ' . (int) $idOrder
-        );
+            WHERE id_order = ' . (int) $id_order);
     }
-
     /**
      * findAllByShopIdAndDateAdd
      *
@@ -65,52 +56,34 @@ class GanalyticsRepository
      *
      * @return array
      */
-    public function findAllByShopIdAndDateAdd($shopId)
+    public function find_all_by_shop_id_and_date_add($shop_id)
     {
-        return Db::getInstance()->ExecuteS(
-            'SELECT *
+        return Db::get_instance()->execute_s('SELECT *
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
             WHERE sent = 0
-                AND id_shop = ' . (int) $shopId . '
-                AND DATE_ADD(date_add, INTERVAL 30 minute) < NOW()'
-        );
+                AND id_shop = ' . (int) $shop_id . '
+                AND DATE_ADD(date_add, INTERVAL 30 minute) < NOW()');
     }
-
     /**
      * addNewRow
      *
      * @param int $type
      * @return bool
      */
-    public function addNewRow(array $data, $type = Db::INSERT_IGNORE)
+    public function add_new_row(array $data, $type = Db::INSERT_IGNORE)
     {
-        return Db::getInstance()->insert(
-            self::TABLE_NAME,
-            $data,
-            false,
-            true,
-            $type
-        );
+        return Db::get_instance()->insert(self::TABLE_NAME, $data, false, true, $type);
     }
-
     /**
      * Adds new order into repository
      *
      *
      * @return bool
      */
-    public function addOrder(int $idOrder, int $idShop)
+    public function add_order(int $id_order, int $id_shop)
     {
-        return $this->addNewRow(
-            [
-                'id_order' => $idOrder,
-                'id_shop' => $idShop,
-                'sent' => 0,
-                'date_add' => ['value' => 'NOW()', 'type' => 'sql'],
-            ]
-        );
+        return $this->add_new_row(['id_order' => $id_order, 'id_shop' => $id_shop, 'sent' => 0, 'date_add' => ['value' => 'NOW()', 'type' => 'sql']]);
     }
-
     /**
      * updateData
      *
@@ -120,16 +93,10 @@ class GanalyticsRepository
      *
      * @return bool
      */
-    public function updateData($data, $where, $limit = 0)
+    public function update_data($data, $where, $limit = 0)
     {
-        return Db::getInstance()->update(
-            self::TABLE_NAME,
-            $data,
-            $where,
-            $limit
-        );
+        return Db::get_instance()->update(self::TABLE_NAME, $data, $where, $limit);
     }
-
     /**
      * Marks order as successfully sent to GA via callback
      *
@@ -137,15 +104,8 @@ class GanalyticsRepository
      *
      * @return bool
      */
-    public function markOrderAsSent($idOrder)
+    public function mark_order_as_sent($id_order)
     {
-        return Db::getInstance()->update(
-            self::TABLE_NAME,
-            [
-                'date_add' => ['value' => 'NOW()', 'type' => 'sql'],
-                'sent' => 1,
-            ],
-            'id_order = ' . (int) $idOrder
-        );
+        return Db::get_instance()->update(self::TABLE_NAME, ['date_add' => ['value' => 'NOW()', 'type' => 'sql'], 'sent' => 1], 'id_order = ' . (int) $id_order);
     }
 }

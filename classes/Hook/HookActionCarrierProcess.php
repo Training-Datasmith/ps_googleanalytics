@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,61 +19,45 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Context;
-use PrestaShop\Module\Ps_Googleanalytics\Repository\CarrierRepository;
+use Presta_Shop\Module\Ps_Googleanalytics\Repository\Carrier_Repository;
 use Ps_Googleanalytics;
-
-class HookActionCarrierProcess implements HookInterface
+class Hook_Action_Carrier_Process implements Hook_Interface
 {
     private $module;
     private $context;
     private $params;
-
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * run
      */
     public function run(): void
     {
         if (isset($this->params['cart']->id_carrier)) {
-            $carrierRepository = new CarrierRepository();
-
+            $carrier_repository = new Carrier_Repository();
             // Load carrier name
-            $carrierName = (string) $carrierRepository->findByCarrierId((int) $this->params['cart']->id_carrier);
-
+            $carrier_name = (string) $carrier_repository->find_by_carrier_id((int) $this->params['cart']->id_carrier);
             // Check if we actually have some name
-            if (empty($carrierName)) {
+            if (empty($carrier_name)) {
                 return;
             }
-
             // Prepare and render the event
-            $eventData = [
-                'currency' => $this->context->currency->iso_code,
-                'value' => (float) $this->context->cart->getSummaryDetails()['total_price'],
-                'shipping_tier' => $carrierName,
-            ];
-            $jsCode = $this->module->getTools()->renderEvent(
-                'add_shipping_info',
-                $eventData
-            );
-
+            $event_data = ['currency' => $this->context->currency->iso_code, 'value' => (float) $this->context->cart->get_summary_details()['total_price'], 'shipping_tier' => $carrier_name];
+            $js_code = $this->module->get_tools()->render_event('add_shipping_info', $event_data);
             // Store it into our repository so we can flush it on next page load
-            $this->module->getDataHandler()->persistData($jsCode);
+            $this->module->get_data_handler()->persist_data($js_code);
         }
     }
-
     /**
      * @param array $params
      */
-    public function setParams($params): void
+    public function set_params($params): void
     {
         $this->params = $params;
     }

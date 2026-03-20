@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,15 +19,13 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Context;
-use OrderDetail;
+use Order_Detail;
 use Ps_Googleanalytics;
 use Validate;
-
-class HookActionProductCancel implements HookInterface
+class Hook_Action_Product_Cancel implements Hook_Interface
 {
     /**
      * @var Ps_Googleanalytics
@@ -38,13 +36,11 @@ class HookActionProductCancel implements HookInterface
      */
     private $context;
     private $params;
-
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->module = $module;
         $this->context = $context;
     }
-
     /**
      * run
      */
@@ -53,60 +49,36 @@ class HookActionProductCancel implements HookInterface
         if (!isset($this->params['id_order_detail']) || !isset($this->params['cancel_quantity'])) {
             return;
         }
-
         // Display GA refund product
-        $orderDetail = new OrderDetail($this->params['id_order_detail']);
-
+        $order_detail = new Order_Detail($this->params['id_order_detail']);
         // Check if the hook provided us with a valid existing ID of order detail.
         // An example are automatic tests, which do not provide it unfortunately.
-        if (!Validate::isLoadedObject($orderDetail)) {
+        if (!Validate::is_loaded_object($order_detail)) {
             return;
         }
-
-        $idProduct = empty($orderDetail->product_attribute_id) ? $orderDetail->product_id : $orderDetail->product_id . '-' . $orderDetail->product_attribute_id;
-        $jsCode = $this->getGoogleAnalytics4(
-            (int) $this->params['order']->id,
-            $idProduct,
-            (float) $this->params['cancel_quantity'],
-            $orderDetail->product_name
-        );
-
-        $this->context->cookie->ga_admin_refund = $jsCode;
+        $id_product = empty($order_detail->product_attribute_id) ? $order_detail->product_id : $order_detail->product_id . '-' . $order_detail->product_attribute_id;
+        $js_code = $this->get_google_analytics4((int) $this->params['order']->id, $id_product, (float) $this->params['cancel_quantity'], $order_detail->product_name);
+        $this->context->cookie->ga_admin_refund = $js_code;
         $this->context->cookie->write();
     }
-
     /**
      * setParams
      *
      * @param array $params
      */
-    public function setParams($params): void
+    public function set_params($params): void
     {
         $this->params = $params;
     }
-
     /**
      * @param int $idOrder
      * @param string $idProduct
      * @param float $quantity
      * @param string $nameProduct
      */
-    protected function getGoogleAnalytics4($idOrder, $idProduct, $quantity, $nameProduct)
+    protected function get_google_analytics4($id_order, $id_product, $quantity, $name_product)
     {
-        $eventData = [
-            'transaction_id' => (int) $idOrder,
-            'items' => [
-                [
-                    'item_id' => (int) $idProduct,
-                    'item_name' => $nameProduct,
-                    'quantity' => (int) $quantity,
-                ],
-            ],
-        ];
-
-        return $this->module->getTools()->renderEvent(
-            'refund',
-            $eventData
-        );
+        $event_data = ['transaction_id' => (int) $id_order, 'items' => [['item_id' => (int) $id_product, 'item_name' => $name_product, 'quantity' => (int) $quantity]]];
+        return $this->module->get_tools()->render_event('refund', $event_data);
     }
 }

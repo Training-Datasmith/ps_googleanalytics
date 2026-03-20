@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,12 +19,10 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics;
+namespace Presta_Shop\Module\Ps_Googleanalytics;
 
 use Configuration;
-
-class GoogleAnalyticsTools
+class Google_Analytics_Tools
 {
     /**
      * Renders purchase event for order
@@ -33,37 +31,16 @@ class GoogleAnalyticsTools
      *
      * @return string|void
      */
-    public function renderPurchaseEvent($orderProducts, array $orderData, string $callbackUrl)
+    public function render_purchase_event($order_products, array $order_data, string $callback_url)
     {
-        if (!is_array($orderProducts)) {
+        if (!is_array($order_products)) {
             return;
         }
-
-        $callbackData = [
-            'orderid' => $orderData['transaction_id'],
-            'customer' => $orderData['customer'],
-        ];
-
-        $eventData = [
-            'transaction_id' => (int) $orderData['transaction_id'],
-            'affiliation' => $orderData['affiliation'],
-            'value' => (float) $orderData['value'],
-            'tax' => (float) $orderData['tax'],
-            'shipping' => (float) $orderData['shipping'],
-            'currency' => $orderData['currency'],
-            'items' => $orderProducts,
-            'event_callback' => "function() {
-                $.get('" . $callbackUrl . "', " . json_encode($callbackData, JSON_UNESCAPED_UNICODE) . ');
-            }',
-        ];
-
-        return $this->renderEvent(
-            'purchase',
-            $eventData,
-            ['event_callback']
-        );
+        $callback_data = ['orderid' => $order_data['transaction_id'], 'customer' => $order_data['customer']];
+        $event_data = ['transaction_id' => (int) $order_data['transaction_id'], 'affiliation' => $order_data['affiliation'], 'value' => (float) $order_data['value'], 'tax' => (float) $order_data['tax'], 'shipping' => (float) $order_data['shipping'], 'currency' => $order_data['currency'], 'items' => $order_products, 'event_callback' => "function() {\n                \$.get('" . $callback_url . "', " . json_encode($callback_data, JSON_UNESCAPED_UNICODE) . ');
+            }'];
+        return $this->render_event('purchase', $event_data, ['event_callback']);
     }
-
     /**
      * Encodes array of data into JSON, optionally ignoring some of the values
      *
@@ -72,21 +49,18 @@ class GoogleAnalyticsTools
      *
      * @return string json encoded data
      */
-    public function jsonEncodeWithBlacklist($data, $ignoredKeys = []): string
+    public function json_encode_with_blacklist($data, $ignored_keys = []): string
     {
         $return = [];
-
         foreach ($data as $k => $v) {
-            if (in_array($k, $ignoredKeys)) {
+            if (in_array($k, $ignored_keys)) {
                 $return[] = json_encode($k, JSON_UNESCAPED_UNICODE) . ': ' . $v;
             } else {
                 $return[] = json_encode($k, JSON_UNESCAPED_UNICODE) . ': ' . json_encode($v, JSON_UNESCAPED_UNICODE);
             }
         }
-
         return '{' . implode(', ', $return) . '}';
     }
-
     /**
      * Renders gtag event and encodes the data. You can optionally pass which data keys you want to
      * output in a raw way - callbacks for example.
@@ -97,19 +71,11 @@ class GoogleAnalyticsTools
      *
      * @return string render gtag event for output
      */
-    public function renderEvent($eventName, $eventData, $ignoredKeys = []): string
+    public function render_event($event_name, $event_data, $ignored_keys = []): string
     {
         // Automatically add send_to parameter to all events to avoid sending extra events
         // to other gtag configs (Ads for example).
-        $eventData = array_merge(
-            ['send_to' => Configuration::get('GA_ACCOUNT_ID')],
-            $eventData
-        );
-
-        return sprintf(
-            'gtag("event", "%1$s", %2$s);',
-            $eventName,
-            $this->jsonEncodeWithBlacklist($eventData, $ignoredKeys)
-        );
+        $event_data = array_merge(['send_to' => Configuration::get('GA_ACCOUNT_ID')], $event_data);
+        return sprintf('gtag("event", "%1$s", %2$s);', $event_name, $this->json_encode_with_blacklist($event_data, $ignored_keys));
     }
 }

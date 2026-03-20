@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,40 +19,26 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Wrapper;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Wrapper;
 
 use Configuration;
 use Context;
 use Currency;
 use Shop;
-
-class OrderWrapper
+class Order_Wrapper
 {
     private $context;
-
     public function __construct(Context $context)
     {
         $this->context = $context;
     }
-
     /**
      * Return a detailed transaction for Google Analytics
      */
-    public function wrapOrder($order): array
+    public function wrap_order($order): array
     {
         // Prepare currency information
         $currency = new Currency((int) $order->id_currency);
-
-        return [
-            'transaction_id' => (int) $order->id,
-            'affiliation' => Shop::isFeatureActive() ? $this->context->shop->name : Configuration::get('PS_SHOP_NAME'),
-            'value' => (float) $order->total_paid,
-            'shipping' => (float) $order->total_shipping,
-            'tax' => (float) $order->total_paid_tax_incl - $order->total_paid_tax_excl,
-            'customer' => (int) $order->id_customer,
-            'currency' => $currency->iso_code,
-            'payment_type' => (string) $order->payment,
-        ];
+        return ['transaction_id' => (int) $order->id, 'affiliation' => Shop::is_feature_active() ? $this->context->shop->name : Configuration::get('PS_SHOP_NAME'), 'value' => (float) $order->total_paid, 'shipping' => (float) $order->total_shipping, 'tax' => (float) $order->total_paid_tax_incl - $order->total_paid_tax_excl, 'customer' => (int) $order->id_customer, 'currency' => $currency->iso_code, 'payment_type' => (string) $order->payment];
     }
 }

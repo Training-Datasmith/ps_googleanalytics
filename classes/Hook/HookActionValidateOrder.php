@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,29 +19,24 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Hooks;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Hooks;
 
 use Context;
 use Ps_Googleanalytics;
-
-class HookActionValidateOrder implements HookInterface
+class Hook_Action_Validate_Order implements Hook_Interface
 {
     /**
      * @var Context
      */
     private $context;
-
     /**
      * @var array
      */
     private $params;
-
     public function __construct(Ps_Googleanalytics $module, Context $context)
     {
         $this->context = $context;
     }
-
     /**
      * run
      */
@@ -49,34 +44,26 @@ class HookActionValidateOrder implements HookInterface
     {
         // Check if we are creating backoffice order, we are only launching this hook when creating backoffice order
         // For FO purposes, we use displayOrderConfirmation.
-        if (empty($this->context->controller->controller_name)
-        || !in_array($this->context->controller->controller_name, ['AdminOrders', 'Admin'])) {
+        if (empty($this->context->controller->controller_name) || !in_array($this->context->controller->controller_name, ['AdminOrders', 'Admin'])) {
             return;
         }
-
         // Mark this ID to immediately display it on next page load
         $order = $this->params['order'];
-
         // We are checking this, because in case of multishipping, there could be multiple orders
         if (!empty($this->context->cookie->ga_admin_order)) {
-            $ga_admin_order = sprintf(
-                '%1$s,%2$s',
-                $this->context->cookie->ga_admin_order,
-                $order->id
-            );
+            $ga_admin_order = sprintf('%1$s,%2$s', $this->context->cookie->ga_admin_order, $order->id);
         } else {
             $ga_admin_order = $order->id;
         }
         $this->context->cookie->ga_admin_order = $ga_admin_order;
         $this->context->cookie->write();
     }
-
     /**
      * setParams
      *
      * @param array $params
      */
-    public function setParams($params): void
+    public function set_params($params): void
     {
         $this->params = $params;
     }

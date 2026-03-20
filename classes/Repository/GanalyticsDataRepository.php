@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  *
@@ -19,15 +19,12 @@ declare(strict_types=1);
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  * International Registered Trademark & Property of PrestaShop SA
  */
-
-namespace PrestaShop\Module\Ps_Googleanalytics\Repository;
+namespace Presta_Shop\Module\Ps_Googleanalytics\Repository;
 
 use Db;
-
-class GanalyticsDataRepository
+class Ganalytics_Data_Repository
 {
     public const TABLE_NAME = 'ganalytics_data';
-
     /**
      * findByCartId
      *
@@ -36,16 +33,13 @@ class GanalyticsDataRepository
      *
      * @return mixed
      */
-    public function findDataByCartIdAndShopId($cartId, $shopId)
+    public function find_data_by_cart_id_and_shop_id($cart_id, $shop_id)
     {
-        return Db::getInstance()->getValue(
-            'SELECT data
+        return Db::get_instance()->get_value('SELECT data
             FROM `' . _DB_PREFIX_ . self::TABLE_NAME . '`
-            WHERE id_cart = ' . (int) $cartId . '
-                AND id_shop = ' . (int) $shopId
-        );
+            WHERE id_cart = ' . (int) $cart_id . '
+                AND id_shop = ' . (int) $shop_id);
     }
-
     /**
      * addNewRow
      *
@@ -55,15 +49,12 @@ class GanalyticsDataRepository
      *
      * @return bool
      */
-    public function addNewRow($cartId, $shopId, $data)
+    public function add_new_row($cart_id, $shop_id, $data)
     {
-        return Db::getInstance()->Execute(
-            'INSERT INTO `' . _DB_PREFIX_ . self::TABLE_NAME . '` (id_cart, id_shop, data)
-            VALUES(\'' . (int) $cartId . '\',\'' . (int) $shopId . '\',\'' . pSQL($data) . '\')
-            ON DUPLICATE KEY UPDATE data = \'' . pSQL($data) . '\';'
-        );
+        return Db::get_instance()->Execute('INSERT INTO `' . _DB_PREFIX_ . self::TABLE_NAME . '` (id_cart, id_shop, data)
+            VALUES(\'' . (int) $cart_id . '\',\'' . (int) $shop_id . '\',\'' . p_sql($data) . '\')
+            ON DUPLICATE KEY UPDATE data = \'' . p_sql($data) . '\';');
     }
-
     /**
      * deleteRow
      *
@@ -72,11 +63,8 @@ class GanalyticsDataRepository
      *
      * @return bool
      */
-    public function deleteRow($cartId, $shopId)
+    public function delete_row($cart_id, $shop_id)
     {
-        return Db::getInstance()->delete(
-            self::TABLE_NAME,
-            'id_cart = ' . (int) $cartId . ' AND id_shop = ' . (int) $shopId
-        );
+        return Db::get_instance()->delete(self::TABLE_NAME, 'id_cart = ' . (int) $cart_id . ' AND id_shop = ' . (int) $shop_id);
     }
 }
