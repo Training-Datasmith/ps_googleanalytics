@@ -8,12 +8,13 @@ class GoogleAnalyticsToolsTest extends ModuleTestCase
     {
         Configuration::updateValue('GA_ACCOUNT_ID', 'G-TEST');
         $tools = new GoogleAnalyticsTools();
-        $this->assertSame('{}', $tools->jsonEncodeWithBlacklist([]));
-        $out = $tools->jsonEncodeWithBlacklist(['name' => 'Café']);
-        $this->assertContains('"name": "Café"', $out);
+        $this->assertSame([], $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist([])));
+        $decoded = $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist(['name' => 'Café']));
+        $this->assertSame('Café', $decoded['name']);
         $raw = $tools->jsonEncodeWithBlacklist(['event_callback' => 'function(){return 1;}', 'value' => 1], ['event_callback']);
         $this->assertContains('function(){return 1;}', $raw);
-        $this->assertContains('"value": 1', $raw);
+        $valueOnly = $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist(['value' => 1]));
+        $this->assertSame(1, $valueOnly['value']);
     }
 
     public function testRenderEventInjectsSendTo()
@@ -21,9 +22,10 @@ class GoogleAnalyticsToolsTest extends ModuleTestCase
         Configuration::updateValue('GA_ACCOUNT_ID', 'G-TEST');
         $tools = new GoogleAnalyticsTools();
         $js = $tools->renderEvent('view_item', ['currency' => 'EUR', 'value' => 10.5]);
-        $this->assertContains('gtag("event", "view_item"', $js);
-        $this->assertContains('"send_to": "G-TEST"', $js);
-        $this->assertContains('"currency": "EUR"', $js);
+        $event = $this->decodeRenderedEvent($js, 'view_item');
+        $this->assertSame('G-TEST', $event['send_to']);
+        $this->assertSame('EUR', $event['currency']);
+        $this->assertEquals(10.5, $event['value']);
     }
 
     public function testRenderPurchaseEventRejectsNonArrayProducts()
@@ -41,9 +43,13 @@ class GoogleAnalyticsToolsTest extends ModuleTestCase
             ['transaction_id' => 42, 'customer' => 7, 'affiliation' => 'Shop', 'value' => 19.9, 'tax' => 1.5, 'shipping' => 3, 'currency' => 'EUR'],
             'https://shop.test/module/ps_googleanalytics/ajax'
         );
-        $this->assertContains('gtag("event", "purchase"', $js);
-        $this->assertContains('42', $js);
-        $this->assertContains('7', $js);
+        $purchase = $this->decodeRenderedEvent($js, 'purchase');
+        $this->assertSame(42, $purchase['transaction_id']);
+        $this->assertSame('EUR', $purchase['currency']);
         $this->assertContains('function()', $js);
+        $this->assertSame(1, preg_match('/\$\.get\([^,]+,\s*(\{.*?\})\)/s', $js, $matches));
+        $callback = $this->decodeJsonBlacklistObject($matches[1]);
+        $this->assertSame(42, $callback['orderid']);
+        $this->assertSame(7, $callback['customer']);
     }
 }

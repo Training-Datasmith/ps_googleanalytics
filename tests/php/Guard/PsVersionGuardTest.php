@@ -13,9 +13,34 @@ class PsVersionGuardTest extends TestCase
         'upgrade/upgrade-5.0.0.php'
     ];
 
-    public function testGuardInventory()
+    public function testGuardVersionFileInventoryMatchesRepository()
     {
-        $this->assertSame(self::EXPECTED_TOTAL, count(self::FILES));
+        $found = ['ps_googleanalytics.php'];
+        foreach (glob(MODULE_ROOT . '/upgrade/*.php') as $absolute) {
+            $base = basename($absolute);
+            if ($base === 'index.php') {
+                continue;
+            }
+            $found[] = 'upgrade/' . $base;
+        }
+        sort($found);
+        $expected = self::FILES;
+        sort($expected);
+        $this->assertSame(self::EXPECTED_TOTAL, count($expected));
+        $this->assertSame($expected, $found);
+    }
+
+    public function testGuardInjectedNoticeFailsSubprocess()
+    {
+        $result = $this->runWrapper(MODULE_ROOT . '/index.php', 'index', ['GUARD_INJECT_NOTICE' => '1']);
+        $this->assertSame(2, $result['exit']);
+    }
+
+    public function testGuardSubprocessUsesMaxErrorReporting()
+    {
+        $result = $this->runWrapper(MODULE_ROOT . '/index.php', 'index');
+        $this->assertSame(0, $result['exit']);
+        $this->assertSame(-1, $result['error_reporting']);
     }
 
     public function testGuardOffExitsBeforeSentinel()
@@ -29,7 +54,8 @@ class PsVersionGuardTest extends TestCase
             $this->assertSame(0, $result['exit']);
             $this->assertFalse($result['sentinel'], $rel);
             $this->assertFalse($result['class_exists']);
-            unlink($dest); rmdir($tmp);
+            unlink($dest);
+            rmdir($tmp);
         }
     }
 
@@ -54,28 +80,37 @@ class PsVersionGuardTest extends TestCase
             } elseif (isset($map[$rel])) {
                 $this->assertTrue($result['functions'][$map[$rel]]);
             }
-            unlink($dest); rmdir($tmp);
+            unlink($dest);
+            rmdir($tmp);
         }
     }
 
-    private function runWrapper($target, $mode)
+    private function runWrapper($target, $mode, array $extraEnv = [])
     {
         $resultFile = sys_get_temp_dir() . '/guard-' . uniqid('', true) . '.json';
-        $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(TESTS_ROOT . '/bin/include-wrapper.php')
+        $cmd = escapeshellarg(PHP_BINARY) . ' -d error_reporting=-1 '
+            . escapeshellarg(TESTS_ROOT . '/bin/include-wrapper.php')
             . ' ' . escapeshellarg($target) . ' ' . escapeshellarg($mode);
         $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-        $proc = proc_open($cmd, $descriptors, $pipes, MODULE_ROOT, ['GUARD_RESULT' => $resultFile]);
+        $env = array_merge(['GUARD_RESULT' => $resultFile], $extraEnv);
+        $proc = proc_open($cmd, $descriptors, $pipes, MODULE_ROOT, $env);
         $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[0]); fclose($pipes[1]); fclose($pipes[2]);
+        fclose($pipes[0]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
         $exit = proc_close($proc);
-        $payload = json_decode(file_get_contents($resultFile), true);
-        unlink($resultFile);
+        $payload = [];
+        if (is_file($resultFile)) {
+            $payload = json_decode(file_get_contents($resultFile), true);
+            unlink($resultFile);
+        }
 
         return [
             'exit' => $exit,
             'sentinel' => !empty($payload['sentinel']),
             'class_exists' => !empty($payload['class_exists']),
             'functions' => isset($payload['functions']) ? $payload['functions'] : [],
+            'error_reporting' => isset($payload['error_reporting']) ? $payload['error_reporting'] : null,
             'stderr' => $stderr,
         ];
     }

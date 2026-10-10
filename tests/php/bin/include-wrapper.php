@@ -3,6 +3,9 @@
  * Subprocess guard/index probe. Arguments: <target-file> <mode>
  * mode: index | guard-off | guard-on
  */
+error_reporting(-1);
+ini_set('display_errors', 'stderr');
+
 if ($argc < 3) {
     fwrite(STDERR, "usage: include-wrapper.php <file> <mode>\n");
     exit(2);
@@ -16,11 +19,24 @@ if (!$resultPath) {
     exit(2);
 }
 
+if (getenv('GUARD_INJECT_NOTICE')) {
+    set_error_handler(function ($severity, $message) {
+        if ($severity === E_NOTICE || $severity === E_USER_NOTICE) {
+            fwrite(STDERR, $message);
+            exit(2);
+        }
+
+        return false;
+    });
+    $guardInjectProbe = $undefinedNoticeVar;
+}
+
 $result = [
     'sentinel' => false,
     'exit_via_include' => false,
     'class_exists' => false,
     'functions' => [],
+    'error_reporting' => error_reporting(),
 ];
 
 $upgradeFunctions = [

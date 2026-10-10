@@ -50,16 +50,58 @@ abstract class ModuleTestCase extends TestCase
         return $module;
     }
 
+    protected function decodeJsonBlacklistObject($encoded)
+    {
+        $decoded = json_decode($encoded, true);
+        $this->assertSame(JSON_ERROR_NONE, json_last_error(), json_last_error_msg());
+
+        return $decoded;
+    }
+
     protected function extractEventJson($js, $eventName)
     {
-        $pattern = '/gtag\("event", "' . preg_quote($eventName, '/') . '", (\{.*?\})\);/s';
-        if (!preg_match($pattern, $js, $m)) {
+        $needle = 'gtag("event", "' . $eventName . '", ';
+        $pos = strpos($js, $needle);
+        if ($pos === false) {
             return null;
         }
-        $json = $m[1];
-        $json = preg_replace('/"event_callback": function\(\) \{.*?\}/s', '"event_callback": null', $json);
-        $json = preg_replace('/,\s*"event_callback": null/', '', $json);
+        $start = $pos + strlen($needle);
+        if (!isset($js[$start]) || $js[$start] !== '{') {
+            return null;
+        }
+        $nextEvent = strpos($js, 'gtag("event"', $start + 1);
+        $callbackPos = strpos($js, '"event_callback"', $start);
+        if ($callbackPos !== false && ($nextEvent === false || $callbackPos < $nextEvent)) {
+            $json = rtrim(substr($js, $start, $callbackPos - $start), ", \n\r\t") . '}';
+        } else {
+            $depth = 0;
+            $len = strlen($js);
+            $json = null;
+            for ($i = $start; $i < $len; $i++) {
+                if ($js[$i] === '{') {
+                    $depth++;
+                }
+                if ($js[$i] === '}') {
+                    $depth--;
+                    if ($depth === 0) {
+                        $json = substr($js, $start, $i - $start + 1);
+                        break;
+                    }
+                }
+            }
+            if ($json === null) {
+                return null;
+            }
+        }
 
         return json_decode($json, true);
+    }
+
+    protected function decodeRenderedEvent($js, $eventName)
+    {
+        $data = $this->extractEventJson($js, $eventName);
+        $this->assertInternalType('array', $data, 'Expected gtag event: ' . $eventName);
+
+        return $data;
     }
 }

@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1
+# PHP 7.1.33-cli image is Debian buster; apt uses archive.debian.org buster suites with
+# debian-archive-keyring copied from bookworm (buster archive signatures), not Stretch.
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS debian-keyring
 RUN apt-get update && apt-get install -y --no-install-recommends debian-archive-keyring \
     && rm -rf /var/lib/apt/lists/*

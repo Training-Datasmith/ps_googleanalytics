@@ -76,7 +76,8 @@ class IndexPhpGuardTest extends TestCase
     private function runWrapper($target, $mode)
     {
         $resultFile = sys_get_temp_dir() . '/guard-' . uniqid('', true) . '.json';
-        $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(TESTS_ROOT . '/bin/include-wrapper.php')
+        $cmd = escapeshellarg(PHP_BINARY) . ' -d error_reporting=-1 '
+            . escapeshellarg(TESTS_ROOT . '/bin/include-wrapper.php')
             . ' ' . escapeshellarg($target) . ' ' . escapeshellarg($mode);
         $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $env = ['GUARD_RESULT' => $resultFile];

@@ -20,7 +20,9 @@ class HookActionProductCancelTest extends ModuleTestCase
         ]);
         $hook->run();
         $js = Context::getContext()->cookie->ga_admin_refund;
-        $this->assertContains('"refund"', $js);
-        $this->assertContains('"item_id":"15-7"', $js);
+        $event = $this->decodeRenderedEvent($js, 'refund');
+        $this->assertSame(9, $event['transaction_id']);
+        $this->assertSame('15-7', (string) $event['items'][0]['item_id']);
+        $this->assertSame(2, $event['items'][0]['quantity']);
     }
 }

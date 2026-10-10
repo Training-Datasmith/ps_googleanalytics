@@ -9,6 +9,7 @@ EXPECTED_SHA256="472b6e275e4479bab71f2f7744d2e22ace9566a4e3cef37952e4d9c07f6d3a9
 EXPECTED_FPR="D8406D0D82947747293778314AA394086372C20A"
 ARTIFACT="/opt/cursor/artifacts/suite-results.md"
 EXPECTED_TOTAL=29
+EXPECTED_METHODS=50
 read -r -d '' EXPECTED_FILES <<'EOF' || true
 Controller/AdminAjaxControllerTest.php
 Controller/FrontAjaxControllerTest.php
@@ -68,6 +69,12 @@ fi
 if [[ "${ACTUAL_FILES}" != "${EXPECTED_SORTED}" ]]; then
   echo "Test file inventory mismatch" >&2
   printf 'expected:\n%s\nactual:\n%s\n' "${EXPECTED_SORTED}" "${ACTUAL_FILES}" >&2
+  exit 1
+fi
+
+ACTUAL_METHODS="$(rg --no-heading 'function test' "${REPO_ROOT}/tests/php" -g '*Test.php' | wc -l | tr -d ' ')"
+if [[ "${ACTUAL_METHODS}" != "${EXPECTED_METHODS}" ]]; then
+  echo "Test method count mismatch (expected ${EXPECTED_METHODS}, got ${ACTUAL_METHODS})" >&2
   exit 1
 fi
 
@@ -133,6 +140,8 @@ fi
   echo "- date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "- branch: ${BRANCH}"
   echo "- sha: ${SHA}"
+  echo "- test files: ${EXPECTED_TOTAL}"
+  echo "- test methods: ${EXPECTED_METHODS}"
   echo "- tests: ${TESTS}"
   echo "- assertions: ${ASSERTIONS:-unknown}"
   echo "- failures: ${FAILURES:-0}"
