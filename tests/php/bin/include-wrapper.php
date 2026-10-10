@@ -19,18 +19,6 @@ if (!$resultPath) {
     exit(2);
 }
 
-if (getenv('GUARD_INJECT_NOTICE')) {
-    set_error_handler(function ($severity, $message) {
-        if ($severity === E_NOTICE || $severity === E_USER_NOTICE) {
-            fwrite(STDERR, $message);
-            exit(2);
-        }
-
-        return false;
-    });
-    $guardInjectProbe = $undefinedNoticeVar;
-}
-
 $result = [
     'sentinel' => false,
     'exit_via_include' => false,

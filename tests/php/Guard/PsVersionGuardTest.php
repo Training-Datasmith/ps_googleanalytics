@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Tests\Support\GuardSubprocessDiagnostics;
 
 class PsVersionGuardTest extends TestCase
 {
@@ -28,12 +29,6 @@ class PsVersionGuardTest extends TestCase
         sort($expected);
         $this->assertSame(self::EXPECTED_TOTAL, count($expected));
         $this->assertSame($expected, $found);
-    }
-
-    public function testGuardInjectedNoticeFailsSubprocess()
-    {
-        $result = $this->runWrapper(MODULE_ROOT . '/index.php', 'index', ['GUARD_INJECT_NOTICE' => '1']);
-        $this->assertSame(2, $result['exit']);
     }
 
     public function testGuardSubprocessUsesMaxErrorReporting()
@@ -85,20 +80,22 @@ class PsVersionGuardTest extends TestCase
         }
     }
 
-    private function runWrapper($target, $mode, array $extraEnv = [])
+    private function runWrapper($target, $mode)
     {
         $resultFile = sys_get_temp_dir() . '/guard-' . uniqid('', true) . '.json';
         $cmd = escapeshellarg(PHP_BINARY) . ' -d error_reporting=-1 '
             . escapeshellarg(TESTS_ROOT . '/bin/include-wrapper.php')
             . ' ' . escapeshellarg($target) . ' ' . escapeshellarg($mode);
         $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-        $env = array_merge(['GUARD_RESULT' => $resultFile], $extraEnv);
+        $env = ['GUARD_RESULT' => $resultFile];
         $proc = proc_open($cmd, $descriptors, $pipes, MODULE_ROOT, $env);
+        $stdout = stream_get_contents($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[0]);
         fclose($pipes[1]);
         fclose($pipes[2]);
         $exit = proc_close($proc);
+        $this->assertGuardChildHasNoDiagnostics($stdout, $stderr);
         $payload = [];
         if (is_file($resultFile)) {
             $payload = json_decode(file_get_contents($resultFile), true);
@@ -111,7 +108,17 @@ class PsVersionGuardTest extends TestCase
             'class_exists' => !empty($payload['class_exists']),
             'functions' => isset($payload['functions']) ? $payload['functions'] : [],
             'error_reporting' => isset($payload['error_reporting']) ? $payload['error_reporting'] : null,
+            'stdout' => $stdout,
             'stderr' => $stderr,
         ];
+    }
+
+    private function assertGuardChildHasNoDiagnostics($stdout, $stderr)
+    {
+        $marker = GuardSubprocessDiagnostics::findMarker($stdout, $stderr);
+        $this->assertNull(
+            $marker,
+            'Guard subprocess emitted PHP diagnostic output' . ($marker ? ': ' . $marker : '')
+        );
     }
 }

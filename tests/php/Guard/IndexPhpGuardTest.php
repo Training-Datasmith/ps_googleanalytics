@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Tests\Support\GuardSubprocessDiagnostics;
 
 class IndexPhpGuardTest extends TestCase
 {
@@ -68,7 +69,6 @@ class IndexPhpGuardTest extends TestCase
             $result = $this->runWrapper($tmp . '/' . $rel, 'index');
             $this->assertSame(0, $result['exit']);
             $this->assertFalse($result['sentinel'], $rel);
-            $this->assertStringNotContainsString('Fatal error', $result['stderr']);
         }
         $this->removeTree($tmp);
     }
@@ -82,20 +82,42 @@ class IndexPhpGuardTest extends TestCase
         $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $env = ['GUARD_RESULT' => $resultFile];
         $proc = proc_open($cmd, $descriptors, $pipes, MODULE_ROOT, $env);
+        $stdout = stream_get_contents($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[0]); fclose($pipes[1]); fclose($pipes[2]);
+        fclose($pipes[0]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
         $exit = proc_close($proc);
+        $this->assertGuardChildHasNoDiagnostics($stdout, $stderr);
         $payload = json_decode(file_get_contents($resultFile), true);
         unlink($resultFile);
 
-        return ['exit' => $exit, 'sentinel' => !empty($payload['sentinel']), 'stderr' => $stderr];
+        return [
+            'exit' => $exit,
+            'sentinel' => !empty($payload['sentinel']),
+            'stdout' => $stdout,
+            'stderr' => $stderr,
+        ];
+    }
+
+    private function assertGuardChildHasNoDiagnostics($stdout, $stderr)
+    {
+        $marker = GuardSubprocessDiagnostics::findMarker($stdout, $stderr);
+        $this->assertNull(
+            $marker,
+            'Guard subprocess emitted PHP diagnostic output' . ($marker ? ': ' . $marker : '')
+        );
     }
 
     private function removeTree($dir)
     {
-        if (!is_dir($dir)) return;
+        if (!is_dir($dir)) {
+            return;
+        }
         foreach (scandir($dir) as $item) {
-            if ($item === '.' || $item === '..') continue;
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
             $path = $dir . '/' . $item;
             is_dir($path) ? $this->removeTree($path) : unlink($path);
         }

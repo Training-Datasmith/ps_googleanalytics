@@ -28,6 +28,7 @@ if (!defined('_PS_MODULE_DIR_')) {
     define('_PS_MODULE_DIR_', MODULE_ROOT . '/');
 }
 
+require_once TESTS_ROOT . '/support/GuardSubprocessDiagnostics.php';
 require_once TESTS_ROOT . '/support/Database.php';
 require_once TESTS_ROOT . '/support/PrestaShopStubs.php';
 require_once TESTS_ROOT . '/support/Autoload.php';

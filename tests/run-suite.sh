@@ -9,7 +9,7 @@ EXPECTED_SHA256="472b6e275e4479bab71f2f7744d2e22ace9566a4e3cef37952e4d9c07f6d3a9
 EXPECTED_FPR="D8406D0D82947747293778314AA394086372C20A"
 ARTIFACT="/opt/cursor/artifacts/suite-results.md"
 EXPECTED_TOTAL=29
-EXPECTED_METHODS=50
+EXPECTED_METHODS=49
 read -r -d '' EXPECTED_FILES <<'EOF' || true
 Controller/AdminAjaxControllerTest.php
 Controller/FrontAjaxControllerTest.php
