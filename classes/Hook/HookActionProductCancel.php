@@ -97,7 +97,7 @@ class HookActionProductCancel implements HookInterface
             'transaction_id' => (int) $idOrder,
             'items' => [
                 [
-                    'item_id' => (int) $idProduct,
+                    'item_id' => $idProduct,
                     'item_name' => $nameProduct,
                     'quantity' => (int) $quantity,
                 ],

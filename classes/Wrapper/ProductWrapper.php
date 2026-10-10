@@ -140,7 +140,11 @@ class ProductWrapper
         }
 
         // Standardize product price, make sure this price went through calculation before you pass it here
-        if (empty($product['price_amount'])) {
+        if (!isset($product['price_amount'])
+            || $product['price_amount'] === ''
+            || $product['price_amount'] === null
+            || $product['price_amount'] === false
+        ) {
             $product['price_amount'] = $product['price'];
         }
 
