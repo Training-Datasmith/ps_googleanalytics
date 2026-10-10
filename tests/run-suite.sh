@@ -112,12 +112,20 @@ BRANCH="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
 PHP_VER="$(sudo docker compose -f tests/docker-compose.yml run --rm php php -r 'echo PHP_VERSION;')"
 
 LAST_LOG="${LOG_DIR}/random-2.txt"
-TESTS="$(awk '/^Tests: /{print $2; exit}' "${LAST_LOG}" || echo unknown)"
-ASSERTIONS="$(awk '/^Tests: /{for(i=1;i<=NF;i++) if($i ~ /^[0-9]+$/ && $(i-1)=="Assertions:") {print $i; exit}}' "${LAST_LOG}" || true)"
-# PHPUnit 7 format: Tests: 29, Assertions: 100, Failures: 0.
-FAILURES="$(sed -n 's/^Tests: .* Failures: \([0-9]*\).*/\1/p' "${LAST_LOG}" | head -1)"
-ERRORS="$(sed -n 's/^Tests: .* Errors: \([0-9]*\).*/\1/p' "${LAST_LOG}" | head -1)"
-SKIPPED="$(sed -n 's/^Tests: .* Skipped: \([0-9]*\).*/\1/p' "${LAST_LOG}" | head -1)"
+SUMMARY_LINE="$(grep -E '^OK \(|^Tests:' "${LAST_LOG}" | tail -1)"
+if [[ "${SUMMARY_LINE}" =~ OK\ \(([0-9]+)\ tests,\ ([0-9]+)\ assertions\) ]]; then
+  TESTS="${BASH_REMATCH[1]}"
+  ASSERTIONS="${BASH_REMATCH[2]}"
+  FAILURES=0
+  ERRORS=0
+  SKIPPED=0
+else
+  TESTS="$(echo "${SUMMARY_LINE}" | grep -Eo '^Tests: [0-9]+' | awk '{print $2}')"
+  ASSERTIONS="$(echo "${SUMMARY_LINE}" | grep -Eo 'Assertions: [0-9]+' | awk '{print $2}')"
+  FAILURES="$(echo "${SUMMARY_LINE}" | grep -Eo 'Failures: [0-9]+' | awk '{print $2}')"
+  ERRORS="$(echo "${SUMMARY_LINE}" | grep -Eo 'Errors: [0-9]+' | awk '{print $2}')"
+  SKIPPED="$(echo "${SUMMARY_LINE}" | grep -Eo 'Skipped: [0-9]+' | awk '{print $2}')"
+fi
 
 {
   echo "# ps_googleanalytics suite results"
@@ -126,7 +134,7 @@ SKIPPED="$(sed -n 's/^Tests: .* Skipped: \([0-9]*\).*/\1/p' "${LAST_LOG}" | head
   echo "- branch: ${BRANCH}"
   echo "- sha: ${SHA}"
   echo "- tests: ${TESTS}"
-  echo "- assertions: $(echo "${LAST_LOG}" | grep -Eo 'Assertions: [0-9]+' | head -1 | awk '{print $2}')"
+  echo "- assertions: ${ASSERTIONS:-unknown}"
   echo "- failures: ${FAILURES:-0}"
   echo "- errors: ${ERRORS:-0}"
   echo "- skipped: ${SKIPPED:-0}"

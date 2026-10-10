@@ -8,7 +8,7 @@ fi
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 TMP_BRANCH="prove-mutations-$(date +%s)"
-trap 'cd "$ROOT"; git checkout remote-test-2026-10-09 >/dev/null 2>&1 || true; git branch -D "$TMP_BRANCH" >/dev/null 2>&1 || true' EXIT INT TERM
+trap 'cd "$ROOT"; git checkout HEAD -- classes/Hook/HookActionProductCancel.php classes/Wrapper/ProductWrapper.php >/dev/null 2>&1 || true; git checkout remote-test-2026-10-09 >/dev/null 2>&1 || true; git branch -D "$TMP_BRANCH" >/dev/null 2>&1 || true' EXIT INT TERM
 
 cd "$ROOT"
 git checkout -b "$TMP_BRANCH"
@@ -28,11 +28,9 @@ if "${DOCKER[@]}" --filter HookActionProductCancelTest; then
   exit 1
 fi
 
-git checkout remote-test-2026-10-09 -- classes/Hook/HookActionProductCancel.php
+git checkout HEAD -- classes/Hook/HookActionProductCancel.php
 
 # Revert fix (b)
-sed -i 's/if (!isset($product\[\x27price_amount\x27\])/,if (empty($product[\x27price_amount\x27])) { $product[\x27price_amount\x27]=$product[\x27price\x27]; } if (false/' classes/Wrapper/ProductWrapper.php || true
-
 python3 << 'PY'
 from pathlib import Path
 p = Path('classes/Wrapper/ProductWrapper.php')
