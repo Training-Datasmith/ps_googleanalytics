@@ -60,41 +60,122 @@ abstract class ModuleTestCase extends TestCase
 
     protected function extractEventJson($js, $eventName)
     {
-        $needle = 'gtag("event", "' . $eventName . '", ';
-        $pos = strpos($js, $needle);
-        if ($pos === false) {
+        $pattern = '/gtag\s*\(\s*["\']event["\']\s*,\s*["\']' . preg_quote($eventName, '/') . '["\']\s*,\s*/';
+        if (!preg_match($pattern, $js, $match, PREG_OFFSET_CAPTURE)) {
             return null;
         }
-        $start = $pos + strlen($needle);
+        $start = $match[0][1] + strlen($match[0][0]);
         if (!isset($js[$start]) || $js[$start] !== '{') {
             return null;
         }
-        $nextEvent = strpos($js, 'gtag("event"', $start + 1);
-        $callbackPos = strpos($js, '"event_callback"', $start);
-        if ($callbackPos !== false && ($nextEvent === false || $callbackPos < $nextEvent)) {
-            $json = rtrim(substr($js, $start, $callbackPos - $start), ", \n\r\t") . '}';
-        } else {
-            $depth = 0;
-            $len = strlen($js);
-            $json = null;
-            for ($i = $start; $i < $len; $i++) {
-                if ($js[$i] === '{') {
-                    $depth++;
-                }
-                if ($js[$i] === '}') {
-                    $depth--;
-                    if ($depth === 0) {
-                        $json = substr($js, $start, $i - $start + 1);
-                        break;
-                    }
-                }
+        $objectLiteral = $this->extractBalancedBraces($js, $start);
+        if ($objectLiteral === null) {
+            return null;
+        }
+        $json = $this->removeEventCallbackFromObjectLiteral($objectLiteral);
+
+        return json_decode($json, true);
+    }
+
+    private function extractBalancedBraces($js, $start)
+    {
+        $depth = 0;
+        $len = strlen($js);
+        for ($i = $start; $i < $len; $i++) {
+            if ($js[$i] === '{') {
+                $depth++;
             }
-            if ($json === null) {
-                return null;
+            if ($js[$i] === '}') {
+                $depth--;
+                if ($depth === 0) {
+                    return substr($js, $start, $i - $start + 1);
+                }
             }
         }
 
-        return json_decode($json, true);
+        return null;
+    }
+
+    private function removeEventCallbackFromObjectLiteral($objectLiteral)
+    {
+        $needle = '"event_callback"';
+        $pos = strpos($objectLiteral, $needle);
+        if ($pos === false) {
+            return $objectLiteral;
+        }
+        $before = substr($objectLiteral, 0, $pos);
+        $i = $pos + strlen($needle);
+        $len = strlen($objectLiteral);
+        while ($i < $len && ctype_space($objectLiteral[$i])) {
+            $i++;
+        }
+        if ($i >= $len || $objectLiteral[$i] !== ':') {
+            return $objectLiteral;
+        }
+        $i++;
+        while ($i < $len && ctype_space($objectLiteral[$i])) {
+            $i++;
+        }
+        $valueEnd = $this->skipJsonishValue($objectLiteral, $i);
+        $after = substr($objectLiteral, $valueEnd);
+        $before = rtrim($before, " \n\r\t,");
+        $after = ltrim($after, " \n\r\t,");
+        if ($after === '' || $after[0] === '}') {
+            return $before . $after;
+        }
+
+        return $before . ',' . $after;
+    }
+
+    private function skipJsonishValue($s, $i)
+    {
+        $len = strlen($s);
+        if ($i >= $len) {
+            return $i;
+        }
+        if (substr($s, $i, 8) === 'function') {
+            $i += 8;
+            while ($i < $len && $s[$i] !== '{') {
+                $i++;
+            }
+            if ($i < $len && $s[$i] === '{') {
+                $end = $this->extractBalancedBraces($s, $i);
+                if ($end !== null) {
+                    return $i + strlen($end);
+                }
+            }
+
+            return $i;
+        }
+        if ($s[$i] === '{') {
+            $end = $this->extractBalancedBraces($s, $i);
+            if ($end !== null) {
+                return $i + strlen($end);
+            }
+
+            return $i + 1;
+        }
+        if ($s[$i] === '"') {
+            $i++;
+            while ($i < $len) {
+                if ($s[$i] === '\\') {
+                    $i += 2;
+                    continue;
+                }
+                if ($s[$i] === '"') {
+                    return $i + 1;
+                }
+                $i++;
+            }
+
+            return $len;
+        }
+
+        while ($i < $len && strpos(",} \n\r\t", $s[$i]) === false) {
+            $i++;
+        }
+
+        return $i;
     }
 
     protected function decodeRenderedEvent($js, $eventName)

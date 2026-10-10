@@ -10,7 +10,7 @@ EXPECTED_FPR="D8406D0D82947747293778314AA394086372C20A"
 ARTIFACT="/opt/cursor/artifacts/suite-results.md"
 EXPECTED_TOTAL=29
 EXPECTED_METHODS=49
-read -r -d '' EXPECTED_FILES <<'EOF' || true
+mapfile -t EXPECTED_FILES <<'EOF'
 Controller/AdminAjaxControllerTest.php
 Controller/FrontAjaxControllerTest.php
 Database/InstallUninstallTest.php
@@ -61,7 +61,7 @@ GNUPGHOME="${GNUPGHOME}" gpg --batch --status-fd 1 --verify "${PHAR_ASC}" "${PHA
   | grep -qx "${EXPECTED_FPR}"
 
 ACTUAL_FILES="$(find "${REPO_ROOT}/tests/php" -name '*Test.php' -printf '%P\n' | LC_ALL=C sort)"
-EXPECTED_SORTED="$(printf '%s\n' ${EXPECTED_FILES} | LC_ALL=C sort)"
+EXPECTED_SORTED="$(printf '%s\n' "${EXPECTED_FILES[@]}" | LC_ALL=C sort)"
 if [[ "$(printf '%s\n' "${EXPECTED_SORTED}" | wc -l)" -ne "${EXPECTED_TOTAL}" ]]; then
   echo "EXPECTED_FILES count mismatch" >&2
   exit 1
@@ -72,7 +72,7 @@ if [[ "${ACTUAL_FILES}" != "${EXPECTED_SORTED}" ]]; then
   exit 1
 fi
 
-ACTUAL_METHODS="$(rg --no-heading 'function test' "${REPO_ROOT}/tests/php" -g '*Test.php' | wc -l | tr -d ' ')"
+ACTUAL_METHODS="$(find "${REPO_ROOT}/tests/php" -name '*Test.php' -exec grep -c 'function test' {} + | awk -F: '{s+=$2} END{print s}')"
 if [[ "${ACTUAL_METHODS}" != "${EXPECTED_METHODS}" ]]; then
   echo "Test method count mismatch (expected ${EXPECTED_METHODS}, got ${ACTUAL_METHODS})" >&2
   exit 1
@@ -97,16 +97,32 @@ until [[ "$(sudo docker compose -f tests/docker-compose.yml ps mariadb --format 
   sleep 1
 done
 
-RUN_PHP=(sudo docker compose -f tests/docker-compose.yml run --rm
+RUN_PHP=(sudo docker compose -f tests/docker-compose.yml run --rm -T
   -v "${PHAR_PATH}:/opt/phpunit/phpunit-7.5.20.phar:ro" php
   php -d auto_prepend_file=/src/tests/php/ini/prepend.php -d error_reporting=-1 -d display_errors=1
   /opt/phpunit/phpunit-7.5.20.phar --configuration tests/phpunit.xml)
 
 LOG_DIR="$(mktemp -d)"
+assert_run_ok() {
+  local label="$1"
+  local logfile="${LOG_DIR}/${label}.txt"
+  local summary
+  summary="$(grep -E '^OK \(|^FAILURES!|^Tests:' "${logfile}" | tail -1)"
+  if [[ ! "${summary}" =~ ^OK\ \(([0-9]+)\ tests,\ ([0-9]+)\ assertions\) ]]; then
+    echo "Run ${label} did not end with OK (... tests, ... assertions): ${summary}" >&2
+    exit 1
+  fi
+  if [[ "${BASH_REMATCH[1]}" -lt "${EXPECTED_METHODS}" ]]; then
+    echo "Run ${label} ran ${BASH_REMATCH[1]} tests, expected at least ${EXPECTED_METHODS}" >&2
+    exit 1
+  fi
+}
+
 run_once() {
   local label="$1"
   shift
   "${RUN_PHP[@]}" "$@" | tee "${LOG_DIR}/${label}.txt"
+  assert_run_ok "${label}"
 }
 
 run_once default-1
@@ -116,22 +132,18 @@ run_once random-2 --order-by=random --random-order-seed=20261008
 
 SHA="$(git -C "${REPO_ROOT}" rev-parse HEAD)"
 BRANCH="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
-PHP_VER="$(sudo docker compose -f tests/docker-compose.yml run --rm php php -r 'echo PHP_VERSION;')"
+PHP_VER="$(sudo docker compose -f tests/docker-compose.yml run --rm -T php php -r 'echo PHP_VERSION;')"
 
 LAST_LOG="${LOG_DIR}/random-2.txt"
-SUMMARY_LINE="$(grep -E '^OK \(|^Tests:' "${LAST_LOG}" | tail -1)"
+SUMMARY_LINE="$(grep -E '^OK \(' "${LAST_LOG}" | tail -1)"
+TESTS=""
+ASSERTIONS=""
+FAILURES=0
+ERRORS=0
+SKIPPED=0
 if [[ "${SUMMARY_LINE}" =~ OK\ \(([0-9]+)\ tests,\ ([0-9]+)\ assertions\) ]]; then
   TESTS="${BASH_REMATCH[1]}"
   ASSERTIONS="${BASH_REMATCH[2]}"
-  FAILURES=0
-  ERRORS=0
-  SKIPPED=0
-else
-  TESTS="$(echo "${SUMMARY_LINE}" | grep -Eo '^Tests: [0-9]+' | awk '{print $2}')"
-  ASSERTIONS="$(echo "${SUMMARY_LINE}" | grep -Eo 'Assertions: [0-9]+' | awk '{print $2}')"
-  FAILURES="$(echo "${SUMMARY_LINE}" | grep -Eo 'Failures: [0-9]+' | awk '{print $2}')"
-  ERRORS="$(echo "${SUMMARY_LINE}" | grep -Eo 'Errors: [0-9]+' | awk '{print $2}')"
-  SKIPPED="$(echo "${SUMMARY_LINE}" | grep -Eo 'Skipped: [0-9]+' | awk '{print $2}')"
 fi
 
 {

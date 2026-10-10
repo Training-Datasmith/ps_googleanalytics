@@ -24,6 +24,8 @@ class ProductWrapperTest extends ModuleTestCase
         $this->assertSame(4.4, $item3['price']);
         $item4 = $wrapper->prepareItemFromProduct(['id_product' => 5, 'name' => 'P', 'price_amount' => false, 'price' => 5.5]);
         $this->assertSame(5.5, $item4['price']);
+        $item5 = $wrapper->prepareItemFromProduct(['id_product' => 8, 'name' => 'P', 'price_amount' => [], 'price' => 8.8]);
+        $this->assertSame(8.8, $item5['price']);
     }
 
     public function testStringZeroPriceAmountIsPreserved()

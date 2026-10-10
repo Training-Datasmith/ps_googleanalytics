@@ -6,6 +6,7 @@ class ConfigurationFormTreatTest extends ModuleTestCase
 {
     public function testTreatPersistsConfiguration()
     {
+        Configuration::updateValue('GA_USERID_ENABLED', '1');
         ToolsState::setValue('GA_ACCOUNT_ID', 'G-ABC');
         ToolsState::setValue('GA_USERID_ENABLED', '0');
         ToolsState::setValue('GA_ANONYMIZE_ENABLED', '1');

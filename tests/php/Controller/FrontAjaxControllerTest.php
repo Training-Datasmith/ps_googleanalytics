@@ -7,7 +7,7 @@ class FrontAjaxControllerTest extends ModuleTestCase
         require_once MODULE_ROOT . '/controllers/front/ajax.php';
         $controller = new ps_GoogleanalyticsAjaxModuleFrontController();
         ToolsState::setValue('orderid', 99999);
-        ToolsState::setValue('customer', 1);
+        ToolsState::setValue('customer', 5);
         Context::getContext()->customer->id = 5;
         try {
             $controller->initContent();

@@ -76,7 +76,7 @@ class Tools
 {
     public static function safeOutput($string)
     {
-        return htmlspecialchars((string) $string, ENT_QUOTES, 'UTF-8');
+        return htmlentities(strip_tags((string) $string), ENT_QUOTES, 'UTF-8');
     }
 
     public static function getValue($key, $default = false)

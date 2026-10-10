@@ -11,8 +11,9 @@ class GoogleAnalyticsToolsTest extends ModuleTestCase
         $this->assertSame([], $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist([])));
         $decoded = $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist(['name' => 'Café']));
         $this->assertSame('Café', $decoded['name']);
-        $raw = $tools->jsonEncodeWithBlacklist(['event_callback' => 'function(){return 1;}', 'value' => 1], ['event_callback']);
-        $this->assertContains('function(){return 1;}', $raw);
+        $blacklisted = $tools->jsonEncodeWithBlacklist(['event_callback' => '{"raw":true}', 'value' => 1], ['event_callback']);
+        $withCallback = $this->decodeJsonBlacklistObject($blacklisted);
+        $this->assertSame(['raw' => true], $withCallback['event_callback']);
         $valueOnly = $this->decodeJsonBlacklistObject($tools->jsonEncodeWithBlacklist(['value' => 1]));
         $this->assertSame(1, $valueOnly['value']);
     }
